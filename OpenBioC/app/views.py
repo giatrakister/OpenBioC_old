@@ -338,6 +338,18 @@ def create_uuid_token():
     '''
     # return str(uuid.uuid4()).split('-')[-1] # Last part: 12 characters
     return str(uuid.uuid4()).replace('-', '') # 32 characters
+    
+def uuid_is_valid(uuid_token):
+    '''
+    https://gist.github.com/ShawnMilo/7777304
+    '''
+
+    try:
+        val = uuid.UUID(uuid_token, version=4)
+    except ValueError:
+        return False
+
+    return val.hex == uuid_token.replace('-', '')
 
 def send_mail_smtplib(from_, to, subject, body):
     '''
@@ -726,6 +738,7 @@ def users_search_3(request, **kwargs):
         return fail('Could not find user with this username')
 
     ret = {
+        'profile_username': username,
         'profile_firstname': u.first_name,
         'profile_lastname': u.last_name,
         'profile_website': u.website,
@@ -810,12 +823,96 @@ def users_search_2(
 
 ### END OF USERS 
 
-def index(request):
+def index(request, **kwargs):
     '''
     View url: ''
     '''
+    #print ('kwargs')
+    #print (kwargs)
 
     context = {}
+    context['general_alert_message'] = ''
+    context['general_success_message'] = ''
+
+
+    # Are we linking to a specific RO?
+    init_interlink_args = {}
+    # tool linking
+    tool_name = kwargs.get('tool_name', '')
+    tool_version = kwargs.get('tool_version', '')
+    tool_edit = kwargs.get('tool_edit', 0)
+    if tool_name and tool_version and tool_edit:
+        if Tool.objects.filter(name=tool_name, version=tool_version, edit=int(tool_edit)).exists():
+            init_interlink_args = {
+                'type': 't',
+                'name': tool_name,
+                'version': tool_version,
+                'edit': int(tool_edit),
+            }
+        else:
+            context['general_alert_message'] = 'Tool {}/{}/{} does not exist'.format(tool_name, tool_version, tool_edit)
+
+    # workflow linking
+    workflow_name = kwargs.get('workflow_name', '')
+    workflow_edit = kwargs.get('workflow_edit', 0)
+    if workflow_name and workflow_edit:
+        if Workflow.objects.filter(name=workflow_name, edit=int(workflow_edit)).exists():
+            init_interlink_args = {
+                'type': 'w',
+                'name': workflow_name,
+                'edit': int(workflow_edit),
+            }
+        else:
+            context['general_alert_message'] = 'Workflow {}/{} does not exist'.format(workflow_name, workflow_edit)
+
+    #references linking
+    reference_name = kwargs.get('reference_name', '')
+    if reference_name:
+        if Reference.objects.filter(name__iexact=reference_name).exists():
+            init_interlink_args = {
+                'type': 'r',
+                'name': reference_name,
+            }
+        else:
+            context['general_alert_message'] = 'Reference {} does not exist'.format(reference_name)
+
+    # user linking 
+    user_username = kwargs.get('user_username', '')
+    if user_username:
+        if OBC_user.objects.filter(user__username=user_username).exists():
+            init_interlink_args = {
+                'type': 'u',
+                'username': user_username,
+            }
+        else:
+            context['general_alert_message'] = 'User {} does not exist'.format(user_username)
+
+    # comment link
+    comment_id = kwargs.get('comment_id', '')
+    if comment_id:
+        if Comment.objects.filter(pk=int(comment_id)).exists():
+            init_interlink_args = {
+                'type': 'c',
+                'id': int(comment_id),
+            }
+        else:
+            context['general_alert_message'] = 'Comment with id={} does not exist'.format(comment_id)
+
+    # Report link
+    report_run = kwargs.get('report_run', '')
+    if report_run:
+        if Report.objects.filter(nice_id=report_run).exists():
+            init_interlink_args = {
+                'type': 'report',
+                'run': report_run,
+            }
+        else:
+            context['general_alert_message'] = 'Report {} does not exist'.format(report_run)
+
+    context['init_interlink_args'] = simplejson.dumps(init_interlink_args)
+
+
+
 
     # Is this user already logged in?
     # https://stackoverflow.com/questions/4642596/how-do-i-check-whether-this-user-is-anonymous-or-actually-a-user-on-my-system 
@@ -827,8 +924,6 @@ def index(request):
         #print ('Username: {}'.format(username))
 
     context['username'] = username
-    context['general_alert_message'] = ''
-    context['general_success_message'] = ''
     context['password_reset_token'] = ''
     context['reset_signup_username'] = ''
     context['reset_signup_email'] = ''
@@ -1108,7 +1203,7 @@ def logout(request):
     '''
 
     django_logout(request)
-    return redirect('/')
+    return redirect('/platform/')
 
 #def user_data_get(request):
 #    '''
@@ -1899,6 +1994,9 @@ def report(request, **kwargs):
         return fail('Could not find token field')
     #print ('token: {}'.format(token))
 
+    if not uuid_is_valid(token):
+        return fail('bad token format')
+
     status_received = kwargs.get('status', None)
     if not status_received:
         return fail('Could not find status field')
@@ -2453,6 +2551,13 @@ def qa_search_2(main_search):
             continue
         else:
             entries_in_tree.add(result_parent.pk)
+
+        # Remove <a></a> hyperlinks from question answers
+        # See issue #106
+        if re.search(r'<a.*a>', result_parent.title):
+            to_substitute = re.search(r'<a.*a>', result_parent.title).group(0)
+            substitute_with = re.search(r'>(.*)</a>', re.search(r'<a.*a>', result_parent.title).group(0)).group(1)
+            result_parent.title = result_parent.title.replace(to_substitute, substitute_with)
 
         to_add = {
             'data': {'id': result_parent.pk},

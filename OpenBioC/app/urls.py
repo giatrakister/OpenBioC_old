@@ -4,6 +4,12 @@ from . import views
 
 urlpatterns = [
 	path('', views.index),
+	re_path(r'^[td]/(?P<tool_name>[\w]+)/(?P<tool_version>[\w\.]+)/(?P<tool_edit>[\d]+)/$', views.index), # tool link
+	re_path(r'^w/(?P<workflow_name>[\w]+)/(?P<workflow_edit>[\d]+)', views.index), # workflow link
+	re_path(r'^r/(?P<reference_name>[\w]+)', views.index), # reference link
+	re_path(r'^u/(?P<user_username>[\w]+)', views.index), # user link
+	re_path(r'^c/(?P<comment_id>[\d]+)', views.index), # comment link
+	re_path(r'^report/(?P<report_run>[\w]+)', views.index), # report link
 	path('register/', views.register), # Register a new user 
 	path('login/', views.login), # Login a user
 	path('logout/', views.logout), # Logout a user
@@ -21,7 +27,6 @@ urlpatterns = [
 	path('workflows_add/', views.workflows_add), # Add (or Save) a new workflow 
 	path('workflows_search_3/', views.workflows_search_3), # Search (and get the details) for a specific SINGLE workflow. 
 	path('run_workflow/', views.run_workflow), # Acceps a workflow_options and workflow object. Runs a workflow
-
 	path('tool_info_validation_queued/', views.tool_info_validation_queued), # Connect validation task with tool
 	path('callback/', views.callback), # Called from controller in order to update validation status
 	path('tool_validation_status/', views.tool_validation_status), # Query validation status if tool

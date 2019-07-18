@@ -181,12 +181,12 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
         $http({
             headers: {
                 "Content-Type": 'application/json',
-                "Access-Control-Allow-Origin": "*", // TODO : REMOVE THIS!
+                //"Access-Control-Allow-Origin": "*", // TODO : REMOVE THIS!
                 //"X-CSRFToken" : getCookie('csrftoken'),
                 "X-CSRFToken" : window.CSRF_TOKEN,
             },
             method : "POST",
-            url : url,
+            url : "/platform/" + url, 
             data : data
         }).then(function mySucces(response) {
             // $scope.myWelcome = response.data;
@@ -1939,6 +1939,7 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
 
                 $scope.hide_all_right_accordions('users'); // Hide everything except users
 
+                $scope.user_username = data['profile_username'];
                 $scope.user_firstname = data['profile_firstname'];
                 $scope.user_lastname = data['profile_lastname'];
                 $scope.user_email = data['profile_email'];
@@ -3490,8 +3491,13 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
                     }).get(0).click();
                 }
                 else if (download_type == 'BASH') {
+                    var output_filename = 'bash.sh';
+                    if (data['nice_id']) {
+                        output_filename = 'bash_' + data['nice_id'] + '.sh';
+                    }
+
                     $("#hiddena").attr({
-                        "download" : 'bash.sh',      
+                        "download" : output_filename,      
                         "href" : "data:," + data['output_object']
                     }).get(0).click();
                 }
@@ -3503,6 +3509,7 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
                 if (!data['report_created']) {
                     $scope.toast('You are not a registered user or your email is not validated. Although this workflow can be executed, the execution will not generate a report.', 'warning')
                 }
+                $scope.toast('SECURITY WARNING: always run scripts in a sandboxed environment!', 'warning');
             },
             function(data) {
                 $scope.toast(data['error_message'], 'error');
@@ -3969,6 +3976,9 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
         }
         else if (args.type == 'c') {
             $scope.qa_search_jstree_select_node(null, {node:{data: args}});
+        }
+        else if (args.type == 'report') {
+            $scope.reports_search_jstree_select_node(null, {node: {data: args}});
         }
     };
 
