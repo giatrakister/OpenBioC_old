@@ -2793,7 +2793,10 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
                 if (cy.$('node[type="input"] , node[type="output"]').length) {
                     cy.$('node[type="input"] , node[type="output"]').forEach(function(variable){
                         var data = variable.data();
-                        $scope.workflow_input_outputs.push({name: data.name, description: data.description, out: data.type === 'output'});
+                        //Make sure that this input/output belongs to this workflow
+                        if ((data.belongto.name == $scope.workflow_info_name) && (data.belongto.edit==$scope.workflow_info_edit)) {
+                            $scope.workflow_input_outputs.push({name: data.name, description: data.description, out: data.type === 'output'});
+                        }
                     });
                 }
                 // $scope.workflow_input_outputs should never be empty. FIXME: Build an initializer function
@@ -3419,6 +3422,7 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
                 workflow_cytoscape.elements.nodes.forEach(function(node){ nodes_to_add.push(node.data) });
                 //window.buildTree(nodes_to_add, {name: $scope.workflow_info_name, edit: null});
                 window.buildTree(nodes_to_add, {name: 'root', edit: null});
+                $scope.workflow_update_tab_completion_info_to_step();
 				
 				//TODO  check if it is correct (added by Galateia)
 				window.cy_close_successors();
