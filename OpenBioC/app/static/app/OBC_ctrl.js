@@ -3230,8 +3230,10 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
                     error_message = 'Variable: "' + input_output.name + '" exists more than once';
                     return;
                 }
-
+				
                 nodes_names.push(input_output.name);
+				
+			
             }
         });
 

@@ -1318,7 +1318,8 @@ window.onload = function () {
         * Create a step ID. This contains: name of step, name of workflow, edit of workflow
         */
         function create_step_id(step, workflow) {
-            return step.name + window.OBCUI.sep + create_workflow_id(workflow);
+            return step.name + window.OBCUI.sep + create_workflow_id(workflow)+ window.OBCUI.sep +'step';
+            //return step.name + window.OBCUI.sep + create_workflow_id(workflow);
         }
         window.create_step_id = create_step_id; // Ugliness. FIXME! We need to make these functions visible everywhere without polluting the namespace
 
@@ -1326,14 +1327,16 @@ window.onload = function () {
         * Create a unique input/output variable ID. This contains the input/output name, name workflow and edit of worfkflow
         */
         function create_input_output_id(input_output, workflow) {
-            return input_output.name + window.OBCUI.sep + create_workflow_id(workflow);
+            return input_output.name + window.OBCUI.sep + create_workflow_id(workflow)+ window.OBCUI.sep +'inout';
+            //return input_output.name + window.OBCUI.sep + create_workflow_id(workflow);
         }
 
         /*
         * Helper for Step Input Output (SIO)
         */
-        function create_SIO_id(SIO, workflow) {
-            return SIO.name + window.OBCUI.sep + create_workflow_id(workflow);
+        function create_SIO_id(SIO, workflow, type) {
+			console.log(type);
+            return SIO.name + window.OBCUI.sep + create_workflow_id(workflow)+ window.OBCUI.sep+type;
         }
 
         /*
@@ -1374,7 +1377,8 @@ window.onload = function () {
         */
         function get_workflow_id_from_SIO_id(sio_id) {
             var sio_id_splitted = sio_id.split(window.OBCUI.sep);
-            if (sio_id_splitted.length != 3) {
+            if (sio_id_splitted.length != 4) {
+            //if (sio_id_splitted.length != 3) {
                 return null;
             }
             return create_workflow_id({ name: sio_id_splitted[1], edit: sio_id_splitted[2] });
@@ -1392,7 +1396,14 @@ window.onload = function () {
         * Get the name of a SIO (Step Input Output)
         */
         function get_SIO_name_from_SIO_id(sio_id) {
-            return sio_id.split(window.OBCUI.sep)[0]
+            return sio_id.split(window.OBCUI.sep)[0];
+        }
+		
+		 /*
+        * Get the type of a SIO (Step Input Output)
+        */
+        function get_SIO_type_from_SIO_id(sio_id) {		
+            return sio_id.split(window.OBCUI.sep)[3];
         }
 
 		/*
@@ -1403,7 +1414,7 @@ window.onload = function () {
             array.forEach(function (sio_id) {
                 if (get_workflow_id_from_SIO_id(sio_id) === old_root_id) {
                     var index = array.indexOf(sio_id);
-                    sio_id = create_SIO_id({ name: get_SIO_name_from_SIO_id(sio_id) }, new_root);
+                    sio_id = create_SIO_id({ name: get_SIO_name_from_SIO_id(sio_id) }, new_root, get_SIO_type_from_SIO_id(sio_id));
                     array[index] = sio_id;
                 }
             });
@@ -2642,8 +2653,13 @@ window.onload = function () {
                 if (JSON.stringify(node_root_belong_ordered) === JSON.stringify(old_root_belong)) {
                     //node.data.belongto = { name: old_root_name, edit: null };
                     node.data.belongto = { name: 'root', edit: null };
-                    if (['step', 'input', 'output'].indexOf(node.data.type) >= 0) {
+					//TODO : TEST IT!!!!!!!!!!!!!!!
+                    if (['step'].indexOf(node.data.type) >= 0) {
                         node.data.id = create_step_id(node.data, new_root);
+                        //node.data.id = node.data.id.substr(0, node.data.id.lastIndexOf(window.OBCUI.sep))+'__null';
+                    }
+					 if (['input', 'output'].indexOf(node.data.type) >= 0) {
+                        node.data.id = create_input_output_id(node.data, new_root);
                         //node.data.id = node.data.id.substr(0, node.data.id.lastIndexOf(window.OBCUI.sep))+'__null';
                     }
                 }
@@ -2672,7 +2688,7 @@ window.onload = function () {
                     // Change the step id
                     function change_SIO_id(old_step_id, new_step_id) {
                         if (get_workflow_id_from_SIO_id(old_step_id) == old_root_id) {
-                            return create_SIO_id({ name: get_SIO_name_from_SIO_id(old_step_id) }, new_root);
+                         return create_SIO_id({ name: get_SIO_name_from_SIO_id(old_step_id) }, new_root, get_SIO_type_from_SIO_id(old_step_id));
                         }
                         else {
                             return old_step_id;
@@ -2717,7 +2733,7 @@ window.onload = function () {
 
                     //Find edges that have the root_workflow in their source
                     else if (get_workflow_id_from_SIO_id(edge.data.source) === old_root_id) {
-                        edge.data.source = create_SIO_id({ name: get_SIO_name_from_SIO_id(edge.data.source) }, new_root);
+                        edge.data.source = create_SIO_id({ name: get_SIO_name_from_SIO_id(edge.data.source) }, new_root, get_SIO_type_from_SIO_id(edge.data.source));
                     }
 
                     //if(edge.data.source.endsWith(old_root))
@@ -2731,7 +2747,7 @@ window.onload = function () {
 
                     //Find edges that have the root_workflow in their target
                     else if (get_workflow_id_from_SIO_id(edge.data.target) === old_root_id) {
-                        edge.data.target = create_SIO_id({ name: get_SIO_name_from_SIO_id(edge.data.target) }, new_root);
+                        edge.data.target = create_SIO_id({ name: get_SIO_name_from_SIO_id(edge.data.target) }, new_root, get_SIO_type_from_SIO_id(edge.data.target));
                     }
 
 
@@ -2749,6 +2765,7 @@ window.onload = function () {
             // this initialization is needed because cy.add() causes multiple instances of layout
             window.initializeTree();
 
+				
             cy.json({ elements: currentElements });   // Add updated data
             cy.ready(function () {          		 // Wait for nodes to be added  
                 cy.layout({                   		// Call layout
