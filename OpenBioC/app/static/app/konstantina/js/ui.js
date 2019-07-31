@@ -1335,7 +1335,6 @@ window.onload = function () {
         * Helper for Step Input Output (SIO)
         */
         function create_SIO_id(SIO, workflow, type) {
-			console.log(type);
             return SIO.name + window.OBCUI.sep + create_workflow_id(workflow)+ window.OBCUI.sep+type;
         }
 
@@ -1777,6 +1776,7 @@ window.onload = function () {
 			var openTarget = function (node) {
 				var answer=false;
 				node.connectedEdges().targets().forEach(function (target) {
+					
 					if(target.style("display") == "none"){
 						//console.log("make visible");
 						target.style("display", "element");
@@ -1797,6 +1797,7 @@ window.onload = function () {
 							
 			}else{
 				this_node.successors().targets().forEach(function (element) {
+					
 			    	//check if node has flag(open)								
 					if (element['_private'].data.type==="tool"  && (typeof element['_private'].data.flag === 'undefined' || element['_private'].data.flag !== 'open')) {
 						element.style("display", "none");
@@ -1822,7 +1823,8 @@ window.onload = function () {
 			
 					// inputs/outpus and steps should never collapse
 					//if (this['_private'].data.type !== "step" && this['_private'].data.type !== "input" && this['_private'].data.type !== "output") { //steps should never collapse
-					
+					console.log(this); 
+					console.log(" :  is clicked");
 					collapse_expand_node(this);
 					
 					
@@ -2075,6 +2077,7 @@ window.onload = function () {
 
                 layout: {
                     name: 'breadthfirst',
+					//name: 'cola',
                     directed: true,
                     padding: 2
                 }
@@ -2203,6 +2206,7 @@ window.onload = function () {
 				cy_rep.ready(function () {           // Wait for nodes to be added  
 					cy_rep.layout({                   // Call layout
 						name: 'breadthfirst',
+						//name: 'cola',
 						directed: true,
 						padding: 2
 					}).run();
@@ -2579,6 +2583,7 @@ window.onload = function () {
             cy.ready(function () {             // Wait for nodes to be added  
                 cy.layout({                    // Call layout
                     name: 'breadthfirst',
+					//name: 'cola',
                     directed: true,
                     padding: 2
                 }).run();
@@ -2770,6 +2775,7 @@ window.onload = function () {
             cy.ready(function () {          		 // Wait for nodes to be added  
                 cy.layout({                   		// Call layout
                     name: 'breadthfirst',
+					//name: 'cola',
                     directed: true,
                     padding: 2
                 }).run();
@@ -2838,6 +2844,7 @@ window.onload = function () {
             //cy.center();
 			 cy.layout({// Call layout
                 name: 'breadthfirst',
+				//name: 'cola',
                 directed: true,
                 padding: 2
             }).run();

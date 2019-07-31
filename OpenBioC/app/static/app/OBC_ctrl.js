@@ -3057,6 +3057,11 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
     * Called from UI.js . Right Click a node in cytoscape --> delete
     */
     $scope.workflow_cytoscape_delete_node = function(node_id) {
+		
+		console.log("DELETE NODE : ");
+		console.log(node_id);
+		
+		
 
         //Cannot edit a saved worfklow
         if (!$scope.workflows_info_editable) {
@@ -3067,7 +3072,11 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
         /* Remove the successors of a node */
         function remove_successors(node) {
             node.successors().targets().forEach(function (element) {
-                cy.remove(element);                  
+				
+				console.log("DELETE SUCCESSOR belong to: ");
+				console.log(element['_private'].data.belongto.name);
+				if(element['_private'].data.belongto.name !== 'root') //check that (whike in fork) the item to delete does not belong to root wf too
+					cy.remove(element);                  
             });
 
         }
@@ -3075,9 +3084,12 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
         var node = cy.$('node[id="' + node_id + '"]');
         var data = node.data();
         if (data.type == 'step'){
+			console.log("TYPE STEP");
             node.remove();
         }
         else if (data.type=='tool') {
+			
+			console.log("TYPE TOOL");
 
             //Is there any tool that is dependent from this tool?
             if (node.incomers('node[type="tool"]').length) {
@@ -3090,6 +3102,9 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
             }
         }
         else if (data.type=='input' || data.type=='output') {
+			
+			console.log("TYPE IN/OUT");
+			
             //Check if it belongs to root WF
             if (window.is_workflow_root_from_SIO_id(node.id())) {
                 
@@ -3116,6 +3131,7 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
             }
         }
         else if (data.type == 'workflow') {
+			console.log("WORKFLOW");
             if (!data.belongto) {
                 $scope.toast('Cannot remove the root workflow', 'error');
             }
