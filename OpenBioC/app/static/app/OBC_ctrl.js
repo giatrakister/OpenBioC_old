@@ -3075,7 +3075,7 @@ app.controller("OBC_ctrl", function($scope, $sce, $http, $filter, $timeout, $log
 				
 				console.log("DELETE SUCCESSOR belong to: ");
 				console.log(element['_private'].data.belongto.name);
-				if(element['_private'].data.belongto.name !== 'root') //check that (whike in fork) the item to delete does not belong to root wf too
+				if(element['_private'].data.belongto.name !== 'root') //check that (whike in fork) the item to delete does not belong to root wf 
 					cy.remove(element);                  
             });
 
